@@ -175,8 +175,17 @@ export default {
               console.log(this.all_province.get(name).confirmed)
               console.log(this.china_map_confirmed[0].value)
             }
-            this.china_map_confirmed[0].value=this.all_province.get('台湾').confirmed_now
-            this.china_map_confirmed[1].value=this.all_province.get('河北省').confirmed_now
+            let province = ['台湾','河北省','山西省','内蒙古自治区','辽宁省','吉林省','黑龙江省','江苏省','浙江省','安徽省','福建省',
+              '江西省','山东省','河南省','湖北省','湖南省','广东省','广西壮族自治区','海南省','四川省','贵州省','云南省','西藏自治区',
+              '陕西省','甘肃省','青海省','宁夏回族自治区','新疆维吾尔自治区','北京市','天津市','上海市','重庆市','香港','澳门']
+            for (var i=0;i < province.length;i++) {
+              if (this.all_province.get(province[i])){
+                this.china_map_confirmed[i].value=this.all_province.get(province[i]).confirmed_now
+              }
+            }
+
+
+
             this.showChinaMap()
             break;
         }
