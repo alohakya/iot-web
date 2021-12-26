@@ -8,6 +8,7 @@ import VueRouter from "vue-router";
 //+引入组件库及相关样式
 import ElementUI from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css'
+import mqtt from "mqtt";
 
 //让Vue使用ElementUI
 Vue.use(ElementUI)
