@@ -169,7 +169,7 @@ export default {
         visualMap: {
           left: 'right',
           min: 1,
-          max: 340,
+          max: 800,
           inRange: {
             color: [
               'rgb(255,255,255)',

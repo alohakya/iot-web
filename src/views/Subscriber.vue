@@ -107,9 +107,6 @@ export default {
     }
   },
   methods: {
-    getWorld (data) {
-
-    },
     drawChart (name, data){
       // 基于准备好的dom，初始化echarts实例
       let chart = this.$echarts.init(document.getElementById('chart'))
@@ -159,7 +156,7 @@ export default {
         },
         // 视觉映射组件
         visualMap: {
-          min: 0,
+          min: 1,
           max: 10000,
           text:['max','min'],
           realtime: false,
