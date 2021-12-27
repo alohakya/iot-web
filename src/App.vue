@@ -16,7 +16,7 @@
           <el-menu-item-group>
 
             <el-menu-item @click="toChinaOverview" index="1-1" style="font-size: 19px;margin-left: 10px">国内疫情概况</el-menu-item>
-            <el-menu-item @click="toB" index="1-2" style="font-size: 19px;margin-left: 10px">新增确诊趋势</el-menu-item>
+            <el-menu-item @click="toChinaConfirmedLine" index="1-2" style="font-size: 19px;margin-left: 10px">现有确诊趋势</el-menu-item>
             <el-menu-item @click="toC" index="1-3" style="font-size: 19px;margin-left: 10px">累计确诊趋势</el-menu-item>
             <el-menu-item @click="toChinaMap" index="1-4" style="font-size: 19px;margin-left: 10px">中国疫情地图</el-menu-item>
           </el-menu-item-group>
@@ -66,6 +66,9 @@ export default {
     },
     toChinaMap(){
       this.$router.push('/ChinaMap')
+    },
+    toChinaConfirmedLine(){
+      this.$router.push('/ChinaConfirmedLine')
     }
   }
 }

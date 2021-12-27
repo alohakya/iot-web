@@ -6,6 +6,7 @@ import One from "../views/One";
 import TWO from "../views/TWO";
 import ChinaMap from "../views/ChinaMap";
 import ChinaOverView from "../views/ChinaOverView";
+import ChinaConfirmedLine from "../views/ChinaConfirmedLine";
 
 Vue.use(VueRouter)
 
@@ -39,6 +40,11 @@ const routes = [
     path: '/ChinaOverview',
     name: 'ChinaMapOverview',
     component: ChinaOverView
+  },
+  {
+    path: '/ChinaConfirmedLine',
+    name: 'ChinaConfirmedLine',
+    component: ChinaConfirmedLine
   },
 ]
 
