@@ -3,29 +3,27 @@
     <div class="buttons-box">
       <button @click="doSubscribe" class="subscribe-button">订阅中国疫情地图</button>
     </div>
-
-
     <el-row>
-      <el-col span="6">
+      <el-col :span="6">
         <div class="box">
           <h1>现有确诊</h1>
           <div class="test" id="confirmed_now"></div>
         </div>
       </el-col>
-      <el-col span="6">
+      <el-col :span="6">
         <div class="box">
           <h1>累计确诊</h1>
           <div class="test" id="confirmed"></div>
         </div>
       </el-col>
 
-      <el-col span="6">
+      <el-col :span="6">
         <div class="box">
           <h1>累计治愈</h1>
           <div class="test" id="cured"></div>
         </div>
       </el-col>
-      <el-col span="6">
+      <el-col :span="6">
         <div class="box">
           <h1>累计死亡</h1>
           <div class="test" id="dead"></div>
@@ -36,26 +34,30 @@
 
     <div class="show-chart-area">
       <div id="ChinaMap"></div>
+      <div id="ChinaLine"></div>
+      <div class='chart' id='chart'></div>
     </div>
+
   </div>
 </template>
 
 <script>
 import mqtt from "mqtt";
 import chinaJson from '/src/assets/json/China.json';
-import worldjs from '/src/assets/js/world.js';
+import '/src/assets/js/world'
+import world_data from '/src/api/world.json'
 export default {
   name: "Subscriber",
   data() {
     return {
-      timer:null, //定时器名称
+      // timer:null, //定时器名称
       connection : {
         host:'ha4edd68.cn-shenzhen.emqx.cloud',
         port: 13506, //ws
         endpoint: '/mqtt',
         clean: false, // 保留会话
         connectTimeout: 10000, // 超时时间
-        reconnectPeriod: 10000, // 重连时间间隔
+        reconnectPeriod: 0, // 重连间隔时间，单位为毫秒，默认为 1000 毫秒，注意：当设置为 0 以后将取消自动重连
         clientId: 'subscriber',
         username: 'admin',
         password: 'admin',
@@ -105,6 +107,103 @@ export default {
     }
   },
   methods: {
+    getWorld (data) {
+
+    },
+    drawChart (name, data){
+      // 基于准备好的dom，初始化echarts实例
+      let chart = this.$echarts.init(document.getElementById('chart'))
+      // 监听屏幕变化自动缩放图表
+      window.addEventListener('resize', function () {
+        chart.resize()
+      })
+      // 绘制图表
+      chart.setOption({
+      // 图表主标题
+      // title: {
+      //   text: '世界地图', // 主标题文本，支持使用 \n 换行
+      //   top: 10, // 定位 值: 'top', 'middle', 'bottom' 也可以是具体的值或者百分比
+      //   left: 'center', // 值: 'left', 'center', 'right' 同上
+      //   textStyle: { // 文本样式
+      //     fontSize: 24,
+      //     fontWeight: 600,
+      //     color: '#000'
+      //   }
+      // },
+        //geo用于显示地图坐标
+        // geo: {
+        //   map: "china", //导入的china.js，该文件中注册的china地图。
+        //   zoom: 1.2, //默认显示的缩放倍数
+        //   roam: true, //是否开启鼠标的缩放
+        //   scaleLimit: { //控制鼠标缩放的最小倍数，最大倍数
+        //     min: 1,
+        //     max: 1
+        //   },
+        grid: {
+          width:'100%',
+          height:'100%',
+          left: '0%',
+          right: '0%',
+          bottom: '0%',
+          containLabel: true
+        },
+        // 提示框组件
+        tooltip: {
+          trigger: 'item', // 触发类型, 数据项图形触发，主要在散点图，饼图等无类目轴的图表中使用
+          // 提示框浮层内容格式器，支持字符串模板和回调函数两种形式
+          // 使用函数模板  传入的数据值 -> value: number | Array
+          formatter: function (val) {
+            if(val.data == null) return ;
+            return val.data.name + ': ' + val.data.value
+          }
+        },
+        // 视觉映射组件
+        visualMap: {
+          min: 0,
+          max: 10000,
+          text:['max','min'],
+          realtime: false,
+          calculable: true,
+          color: ['rgba(255,0,0,1)','rgba(255,255,255,1)'],
+        },
+        series:[
+          {
+            type: 'map', // 类型
+            // 系列名称，用于tooltip的显示，legend 的图例筛选 在 setOption 更新数据和配置项时用于指定对应的系列
+            name: '世界地图',
+            mapType: 'world', // 地图类型
+            // 是否开启鼠标缩放和平移漫游 默认不开启 如果只想要开启缩放或者平移，可以设置成 'scale' 或者 'move' 设置成 true 为都开启
+            roam: true,
+            // 图形上的文本标签
+            label: {
+              show: false // 是否显示对应地名
+            },
+            zoom: 1.2,
+            // 地图区域的多边形 图形样式
+            itemStyle: {
+              // areaColor: '#7B68EE', // 地图区域的颜色 如果设置了visualMap，areaColor属性将不起作用
+              borderWidth: 0.5, // 描边线宽 为 0 时无描边
+              borderColor: '#000', // 图形的描边颜色 支持的颜色格式同 color，不支持回调函数
+              borderType: 'solid' // 描边类型，默认为实线，支持 'solid', 'dashed', 'dotted'
+            },
+            // 高亮状态下的多边形和标签样式
+            emphasis: {
+              label: {
+                show: true, // 是否显示标签
+                color: '#fff' // 文字的颜色 如果设置为 'auto'，则为视觉映射得到的颜色，如系列色
+              },
+              itemStyle: {
+                areaColor: '#FF6347' // 地图区域的颜色
+              }
+            },
+            // 自定义地区的名称映射
+            nameMap: name,
+            // 地图系列中的数据内容数组 数组项可以为单个数值
+            data: data
+          }
+        ]
+      })
+    },
     createConnection(){
       // 创建连接
       const { host, port, endpoint, ...options }=this.connection
@@ -183,9 +282,6 @@ export default {
                 this.china_map_confirmed[i].value=this.all_province.get(province[i]).confirmed_now
               }
             }
-
-
-
             this.showChinaMap()
             break;
         }
@@ -203,7 +299,6 @@ export default {
           console.log(`${granted[0].topic} was subscribed`)
         }
       })
-
       // 订阅中国的ChinaProvince{List<>名称,现有确诊、累计、治愈、死亡}
       this.client.subscribe('ChinaProvince', { qos: 2 }, function (error, granted) {
         if (error) {
@@ -212,25 +307,39 @@ export default {
           console.log(`${granted[0].topic} was subscribed`)
         }
       })
-      // 订阅后发布请求，提醒服务器发送数据
-      var publish= {
-        topic: 'api',
-        qos: 1,
-        payload: 'allCountry',
-      }
-      const { topic, qos, payload } = publish
-      this.client.publish(topic, payload, qos, error => {
+      // 订阅中国的(List<>Date,现有确诊、累计、治愈、死亡，类型)
+      this.client.subscribe('CountryHistory', { qos: 2 }, function (error, granted) {
         if (error) {
-          console.log('Publish error', error)
-        }
-        else {
-          console.log('Publish succeeded!')
+          console.log(error)
+        } else {
+          console.log(`${granted[0].topic} was subscribed`)
         }
       })
-    },
-    // 展示数据
-    showData(){
-      var myDom = document.getElementById('test');
+      // 订阅后发布请求，提醒服务器发送数据
+      // 请求allCountry,订阅所有国家的allCountry{List<>名称,现有确诊、累计、治愈、死亡}
+      this.client.publish('api', 'allCountry', { qos: 1, retain: false }, function (error) {
+        if (error) {
+          console.log(error)
+        } else {
+          console.log('Published')
+        }
+      })
+      // 订阅中国的ChinaProvince{List<>名称,现有确诊、累计、治愈、死亡}
+      this.client.publish('api', 'ChinaProvince', { qos: 1, retain: false }, function (error) {
+        if (error) {
+          console.log(error)
+        } else {
+          console.log('Published api ChinaProvince')
+        }
+      })
+      // 订阅中国的(List<>日期,现有确诊、累计、治愈、死亡，类型)
+      this.client.publish('CountryHistory', 'China', { qos: 1, retain: false }, function (error) {
+        if (error) {
+          console.log(error)
+        } else {
+          console.log('Published')
+        }
+      })
 
     },
     // 加载中国地图
@@ -344,25 +453,18 @@ export default {
       };
       myChart.setOption(option);
     },
-    showChinaOverview(){
-      var myDom=document.getElementById('china_overview')
-
-    },
   },
   mounted() {
     this.createConnection()
     this.doSubscribe()
+    this.drawChart(world_data.namemap, world_data.dataArr)
   },
-  destroyed() {
-    clearInterval(this.timer)
-  }
 }
 </script>
 
 <style scoped>
 #Subscriber{
   width: 100%;
-
 }
 .subscribe-button{
   /*width: 20px;*/
@@ -378,5 +480,13 @@ export default {
 }
 .show-chart-area{
   margin:0 auto;
+}
+.chart{
+  width: 80%;
+  margin:0 auto;
+  height: 600px;
+  border: 1px solid #eeeeee;
+  /* background: url(../../public/static/bg.png) no-repeat; 背景图设置*/
+  background-size: 100% 100%;
 }
 </style>
