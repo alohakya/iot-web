@@ -7,7 +7,8 @@
           class="el-menu-vertical-demo"
           background-color="#545c64"
           text-color="rgba(255,255,255,0.9)"
-          active-text-color="#ffd04b">
+          active-text-color="#ffd04b"
+      >
         <el-submenu index="1" style="margin-top: 10px">
           <template slot="title">
             <i class="el-icon-location"></i>
@@ -15,10 +16,12 @@
           </template>
           <el-menu-item-group>
 
-            <el-menu-item @click="toChinaOverview" index="1-1" style="font-size: 19px;margin-left: 10px">国内疫情概况</el-menu-item>
-            <el-menu-item @click="toChinaConfirmedLine" index="1-2" style="font-size: 19px;margin-left: 10px">现有确诊趋势</el-menu-item>
-            <el-menu-item @click="toC" index="1-3" style="font-size: 19px;margin-left: 10px">累计确诊趋势</el-menu-item>
-            <el-menu-item @click="toChinaMap" index="1-4" style="font-size: 19px;margin-left: 10px">中国疫情地图</el-menu-item>
+            <el-menu-item @click="toChinaMap" index="1-1" style="font-size: 19px;margin-left: 10px">国内疫情地图
+            </el-menu-item>
+            <el-menu-item @click="toChinaConfirmedLine" index="1-2" style="font-size: 19px;margin-left: 10px">
+              现有确诊趋势</el-menu-item>
+            <el-menu-item @click="toChinaOverview" index="1-3" style="font-size: 19px;margin-left: 10px">国内疫情概况</el-menu-item>
+
           </el-menu-item-group>
         </el-submenu>
 
@@ -29,8 +32,7 @@
           </template>
           <el-menu-item-group>
             <el-menu-item @click="toWorldMap" index="2-1" style="font-size: 19px;margin-left: 10px">国外疫情地图</el-menu-item>
-            <el-menu-item @click="toB" index="2-2" style="font-size: 19px;margin-left: 10px">新增确诊趋势</el-menu-item>
-            <el-menu-item @click="toC" index="2-3" style="font-size: 19px;margin-left: 10px">累计确诊趋势</el-menu-item>
+            <el-menu-item @click="toAllCountry" index="2-2" style="font-size: 19px;margin-left: 10px">各国疫情形势</el-menu-item>
           </el-menu-item-group>
         </el-submenu>
 
@@ -46,34 +48,32 @@
   </el-row>
 </template>
 <script>
+import mqtt from "mqtt";
+
 export default {
   name:'app',
   data(){
     return{
       activeIndex:'1',
-
     }
   },
   methods:{
     toChinaOverview(){
       this.$router.push('/ChinaOverview')
     },
-    toB(){
-      this.$router.push('/Two')
-    },
-    toC(){
-      this.$router.push('/')
-    },
     toChinaMap(){
-      this.$router.push('/ChinaMap')
+      this.$router.push('/')
     },
     toChinaConfirmedLine(){
       this.$router.push('/ChinaConfirmedLine')
     },
     toWorldMap(){
       this.$router.push('/WorldMap')
+    },
+    toAllCountry(){
+      this.$router.push('/AllCountry')
     }
-  }
+  },
 }
 </script>
 <style>

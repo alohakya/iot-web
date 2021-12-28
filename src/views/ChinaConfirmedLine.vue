@@ -1,16 +1,32 @@
 <template>
-
+  <div class="show-chart-area">
+    <div id="ChinaConfirmedLine"></div>
+  </div>
 </template>
 
 <script>
 import mqtt from "mqtt";
-
 export default {
-  data(){return{
-    province:new Map(),
-  }
+  name:'ChinaConfirmedLine',
+  data(){
+    return{
+      connection : {
+        host:'ha4edd68.cn-shenzhen.emqx.cloud',
+        port: 13506, //ws
+        endpoint: '/mqtt',
+        clean: false, // 保留会话
+        connectTimeout: 10000, // 超时时间
+        reconnectPeriod: 0, // 重连间隔时间，单位为毫秒，默认为 1000 毫秒，注意：当设置为 0 以后将取消自动重连
+        clientId: 'subscriber',
+        username: 'admin',
+        password: 'admin',
+      },
+      client:{
+        connected: false,
+      },
+      subscribeSuccess:false,
+    }
   },
-  name: "ProvinceIncrease",
   methods:{
     createConnection(){
       // 创建连接
@@ -30,40 +46,180 @@ export default {
       })
       // 接收message
       this.client.on('message', (topic, message) => {
+        if(topic=='no'){
+          // window.alert(`${message}`)
+          this.$notify.info({
+            title: '消息',
+            message: `${message}`
+          });
+        }
         if(topic=='History'){
           var data=`${message}`
           var dataJSON = JSON.parse(data)
-          dataJSON.sortBy(name);
-          // for(var i=0; i<dataJSON.length; i++){
-          //   var name=dataJSON[i].name
-          //   var value={
-          //     confirmed:dataJSON[i].confirmed,
-          //     cured:dataJSON[i].cured,
-          //     dead:dataJSON[i].dead,
-          //     type:dataJSON[i].type,
-          //   }
-          //   console.log(value)
-          //   console.log('end')
-          //   this.province.set(name,value)
-          //   console.log(this.province.get(name).confirmed)
-          // }
-          // let province = ['台湾','河北省','山西省','内蒙古自治区','辽宁省','吉林省','黑龙江省','江苏省','浙江省','安徽省','福建省',
-          //   '江西省','山东省','河南省','湖北省','湖南省','广东省','广西壮族自治区','海南省','四川省','贵州省','云南省','西藏自治区',
-          //   '陕西省','甘肃省','青海省','宁夏回族自治区','新疆维吾尔自治区','北京市','天津市','上海市','重庆市','香港','澳门']
-          // for (var i=0;i < province.length;i++) {
-          //   if (this.all_province.get(province[i])){
-          //     this.china_map_confirmed[i].value=this.all_province.get(province[i]).confirmed_now
-          //   }
-          // }
-          this.showehart(dataJSON)
+          var xData=[];
+          var yData=[];
+          var xxData=[];
+          var yyData=[];
+          for(var i=0; i<dataJSON.length; i++){
+            if(dataJSON[i].name=='中国'){
+              var time=dataJSON[i].time
+              var value={
+                confirmed_now:dataJSON[i].confirmed_now,
+                confirmed:dataJSON[i].confirmed,
+                cured:dataJSON[i].cured,
+                dead:dataJSON[i].dead,
+                type:dataJSON[i].type,
+              }
+              if(value.type==0){
+                xData.push(time)
+                yData.push(value.confirmed_now)
+              }
+              else{
+                xxData.push(time)
+                yyData.push(value.confirmed_now)
+              }
+            }
+          }
+          this.showLineChart(xData,yData,xxData,yyData)
         }
       })
     },
+    // 订阅主题
+    doSubscribe() {
+      // 订阅并请求数据
+      this.client.subscribe('no', { qos: 2 }, function (error, granted) {
+        if (error) {
+          console.log(error)
+        } else {
+          console.log(`${granted[0].topic} was subscribed`)
+        }
+      })
+      // 订阅History{List<>名称,现有确诊、累计、治愈、死亡}
+      this.client.subscribe('History', { qos: 2 }, function (error, granted) {
+        if (error) {
+          console.log(error)
+        } else {
+          console.log(`${granted[0].topic} was subscribed`)
+        }
+      })
+
+      // 订阅后发布请求，提醒服务器发送数据
+      this.client.publish('api', '中国', { qos: 1, retain: false }, function (error) {
+        if (error) {
+          console.log(error)
+        } else {
+          console.log('Published api 中国')
+        }
+      })
+    },
+    // 加载折线图
+    showLineChart(xData,yData,xxData,yyData){
+      // console.log('start')
+      // console.log(xData)
+      // console.log(xxData)
+      var xxxData=[]
+      var yyyData=[]
+      for(let i=0; i<xData.length;i++){
+        xxxData.push(xData[i])
+      }
+      for(let i=0; i<xxData.length; i++){
+        xxxData.push(xxData[i])
+      }
+      for(let i=0; i<yData.length;i++){
+        yyyData.push(yData[i])
+      }
+      for(let i=0; i<yyData.length; i++){
+        yyyData.push(yyData[i])
+      }
+      var chartDom = document.getElementById('ChinaConfirmedLine');
+      var myChart = this.$echarts.init(chartDom,null,{
+        width: 800,
+        height: 700
+      });
+      var option;
+      option = {
+        title: {
+          text: '全国现有确诊趋势',
+          top: 10, // 定位 值: 'top', 'middle', 'bottom' 也可以是具体的值或者百分比
+          bottom:10,
+          left: 'center', // 值: 'left', 'center', 'right' 同上
+          textStyle: { // 文本样式
+            fontSize: 24,
+            fontWeight: 600,
+            color: '#000'
+          }
+        },
+        tooltip: {
+          trigger: 'axis',
+          axisPointer: {
+            type: 'cross'
+          }
+        },
+        xAxis: {
+          type: 'category',
+          data: xxxData
+        },
+        yAxis: {
+          type: 'value'
+        },
+        visualMap: {
+          show: false,
+          dimension: 0,
+          pieces: [
+            {
+              lte: xData.length-1,
+              color: 'red'
+            },
+            {
+              gt: xData.length-1,
+              lte: (xData.length),
+              color: 'red'
+            },
+            {
+              gt: (xData.length),
+              color: 'green'
+            }
+          ]
+        },
+        series: [
+          {
+            name: '现有确诊人数',
+            type: 'line',
+            data: yyyData,
+            smooth:true,
+            markArea: {
+              itemStyle: {
+                color: 'rgba(255, 173, 177, 0.4)'
+              },
+              data: [
+                [
+                  {
+                    name: '10天预测确诊人数',
+                    xAxis: xxData[0]
+                  },
+                  {
+                    xAxis: xxData[xxData.length-1]
+                  }
+                ],
+              ]
+            }
+
+          },
+        ]
+      };
+      option && myChart.setOption(option);
+    }
+  },
+  mounted() {
+    this.createConnection()
+    this.doSubscribe()
   }
 
 }
 </script>
 
 <style scoped>
-
+.show-chart-area{
+  margin:0 auto;
+}
 </style>

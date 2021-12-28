@@ -804,6 +804,14 @@ export default {
       })
       // 接收message
       this.client.on('message', (topic, message) => {
+        if(topic=='no'){
+          // window.alert(`${message}`)
+          this.$notify.info({
+            title: '消息',
+            message: `${message}`
+          });
+        }
+
         if(topic=='allCountry'){
           var data=`${message}`
           var dataJSON = JSON.parse(data)
@@ -837,6 +845,15 @@ export default {
     },
     // 订阅主题
     doSubscribe() {
+      this.client.subscribe('no', { qos: 2 }, function (error, granted) {
+        if (error) {
+          console.log(error)
+        } else {
+          console.log(`${granted[0].topic} was subscribed`)
+        }
+      })
+
+
       // 订阅并请求数据
       // 订阅allCountry{List<>名称,现有确诊、累计、治愈、死亡}
       this.client.subscribe('allCountry', { qos: 2 }, function (error, granted) {
@@ -862,7 +879,7 @@ export default {
 
       // 基于准备好的dom，初始化echarts实例
       let chart = this.$echarts.init(document.getElementById('WorldMap'),null,{
-        width: 980,
+        width: 1250,
         height: 700
       })
       // 监听屏幕变化自动缩放图表
@@ -873,7 +890,7 @@ export default {
       chart.setOption({
         // 图表主标题
         title: {
-          text: '世界地图', // 主标题文本，支持使用 \n 换行
+          text: '世界疫情地图', // 主标题文本，支持使用 \n 换行
           top: 10, // 定位 值: 'top', 'middle', 'bottom' 也可以是具体的值或者百分比
           left: 'center', // 值: 'left', 'center', 'right' 同上
           textStyle: { // 文本样式
@@ -882,15 +899,6 @@ export default {
             color: '#000'
           }
         },
-        //geo用于显示地图坐标
-        // geo: {
-        //   map: "china", //导入的china.js，该文件中注册的china地图。
-        //   zoom: 1.2, //默认显示的缩放倍数
-        //   roam: true, //是否开启鼠标的缩放
-        //   scaleLimit: { //控制鼠标缩放的最小倍数，最大倍数
-        //     min: 1,
-        //     max: 1
-        //   },
         grid: {
           width:'100%',
           height:'100%',
@@ -919,16 +927,7 @@ export default {
           realtime: false,
           calculable: true,
           inRange: {
-            color: ['rgba(255,255,255,1)','#c3e0ff','#0064d0'],
-            // color: [
-            //   'rgb(255,255,255)',
-            //   '#ffffbf',
-            //   '#fee090',
-            //   '#fdae61',
-            //   '#f46d43',
-            //   '#d73027',
-            //   '#a50026'
-            // ]
+            color: ['rgba(255,255,255,1)','#fcc5c7','#ffa1a5','#fd5c63','#fd0202'],
           },
           text: ['High', 'Low'],
         },
@@ -936,7 +935,7 @@ export default {
           {
             type: 'map', // 类型
             // 系列名称，用于tooltip的显示，legend 的图例筛选 在 setOption 更新数据和配置项时用于指定对应的系列
-            name: '世界地图',
+            name: '世界疫情地图',
             mapType: 'world', // 地图类型
             // 是否开启鼠标缩放和平移漫游 默认不开启 如果只想要开启缩放或者平移，可以设置成 'scale' 或者 'move' 设置成 true 为都开启
             roam: true,
@@ -959,7 +958,7 @@ export default {
                 color: '#fff' // 文字的颜色 如果设置为 'auto'，则为视觉映射得到的颜色，如系列色
               },
               itemStyle: {
-                areaColor: '#FF6347' // 地图区域的颜色
+                areaColor: '#f5ce34' // 地图区域的颜色
               }
             },
             // 自定义地区的名称映射

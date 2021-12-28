@@ -84,6 +84,13 @@ export default {
       })
       // 接收message
       this.client.on('message', (topic, message) => {
+        if(topic=='no'){
+          // window.alert(`${message}`)
+          this.$notify.info({
+            title: '消息',
+            message: `${message}`
+          });
+        }
         if(topic=='ChinaProvince'){
           var data=`${message}`
           var dataJSON = JSON.parse(data)
@@ -95,11 +102,7 @@ export default {
               cured:dataJSON[i].cured,
               dead:dataJSON[i].dead,
             }
-            console.log(value)
-            console.log('end')
             this.all_province.set(name,value)
-            console.log(this.all_province.get(name).confirmed)
-            console.log(this.china_map_confirmed[0].value)
           }
           let province = ['台湾','河北省','山西省','内蒙古自治区','辽宁省','吉林省','黑龙江省','江苏省','浙江省','安徽省','福建省',
             '江西省','山东省','河南省','湖北省','湖南省','广东省','广西壮族自治区','海南省','四川省','贵州省','云南省','西藏自治区',
@@ -116,6 +119,13 @@ export default {
     // 订阅主题
     doSubscribe() {
       // 订阅并请求数据
+      this.client.subscribe('no', { qos: 2 }, function (error, granted) {
+        if (error) {
+          console.log(error)
+        } else {
+          console.log(`${granted[0].topic} was subscribed`)
+        }
+      })
       // 订阅中国的ChinaProvince{List<>名称,现有确诊、累计、治愈、死亡}
       this.client.subscribe('ChinaProvince', { qos: 2 }, function (error, granted) {
         if (error) {
@@ -139,7 +149,7 @@ export default {
     showChinaMap(){
       var chartDom = document.getElementById('ChinaMap');
       var myChart = this.$echarts.init(chartDom,null, {
-        width: 980,
+        width: 1250,
         height: 700
       });
       var option;
@@ -148,10 +158,17 @@ export default {
       this.$echarts.registerMap('China', chinaJson, {});
       option = {
         title: {
-          text: '中国疫情分布 (2021-12-24)',
+          text: '现有确诊病例数（排除治愈、死亡）',
           subtext: '数据来源：丁香园网站',
           sublink: 'https://portal.dxy.cn',
-          left: 'right'
+          top: 10, // 定位 值: 'top', 'middle', 'bottom' 也可以是具体的值或者百分比
+          bottom:10,
+          left: 'center', // 值: 'left', 'center', 'right' 同上
+          textStyle: { // 文本样式
+            fontSize: 24,
+            fontWeight: 600,
+            color: '#000'
+          }
         },
         tooltip: {
           trigger: 'item',
@@ -197,9 +214,9 @@ export default {
         },
         series: [
           {
-            name: '中国疫情分布情况',
+            name: '现有确诊病例数',
             type: 'map',
-            // roam: true,
+            roam: true,
             map: 'China',
             label: {
               show: true,
@@ -245,6 +262,11 @@ export default {
         ]
       };
       myChart.setOption(option);
+      myChart.on('click', function(params){
+        // alert(1);
+        window.alert(params.toString())
+        // console.log(params);//此处写点击事件内容
+      });//点击事件，此事件还可以用到柱状图等其他地图
     },
   },
   mounted() {
